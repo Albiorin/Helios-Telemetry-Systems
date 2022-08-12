@@ -6,7 +6,7 @@ import time
 
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 print("Welcome to Helios Ground Systems")
-time.sleep(3)
+time.sleep(2)
 host = input('Enter instrument ip address: ')
 time.sleep(1)
 print('Connecting...')
