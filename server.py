@@ -3,7 +3,7 @@ import cv2
 import pickle
 import struct
 
-host = '169.254.42.82'
+host = '10.20.50.4'
 port = 80
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
