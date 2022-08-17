@@ -13,12 +13,11 @@ import PyQt5
 
 host = '10.20.50.87'
 port = 80
-s= socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((host, 80))
-
+queue = Queue()
 class MainWindow(QWidget):
     def __init__(self):
-
         super(MainWindow, self).__init__()
         self.VBL = QVBoxLayout()
         self.FeedLabel = QLabel()
@@ -32,21 +31,18 @@ class MainWindow(QWidget):
         self.Worker2.start()
         self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
         self.setLayout(self.VBL)
+
     def ImageUpdateSlot(self, Image):
         self.FeedLabel.setPixmap(QPixmap.fromImage(Image))
 
     def CancelFeed(self):
         print("hehe")
 
- 
-queue = Queue()
 print("Main thread online")
-
 class Worker2(QThread):
     def run(self):
         self.ThreadActive = True
         while self.ThreadActive:
-
             while True:
                 print("Worker 2 online")
                 data = b""
@@ -68,7 +64,6 @@ class Worker2(QThread):
                 key = cv2.waitKey(10)
                 if key == 13:
                     break
-
     def stop(self):
         self.ThreadActive = False
         self.quit()
@@ -87,8 +82,7 @@ class Worker1(QThread):
                 self.ImageUpdate.emit(Pic)
                 if key == 13:
                     key = cv2.waitKey(10)
-                    break
-                
+                    break 
     def stop(self):
         self.ThreadActive = False
         self.quit()
