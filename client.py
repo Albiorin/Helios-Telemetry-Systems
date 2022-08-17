@@ -1,5 +1,6 @@
 from re import S
 import sys
+from turtle import delay
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
@@ -10,6 +11,8 @@ import pickle
 import numpy as np
 from queue import *
 import PyQt5
+import time
+
 
 host = '10.20.50.87'
 port = 80
@@ -25,10 +28,11 @@ class MainWindow(QWidget):
         self.CancelBTN = QPushButton("Cancel")
         self.CancelBTN.clicked.connect(self.CancelFeed)
         self.VBL.addWidget(self.CancelBTN)
-        self.Worker1 = Worker1()
         self.Worker2 = Worker2()
-        self.Worker1.start()
         self.Worker2.start()
+        self.Worker1 = Worker1()
+        self.Worker1.start()
+        
         self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
         self.setLayout(self.VBL)
 
@@ -43,10 +47,10 @@ class Worker2(QThread):
     def run(self):
         self.ThreadActive = True
         while self.ThreadActive:
+            print("Worker 2 online")
+            data = b""
+            payload_size = struct.calcsize("Q")
             while True:
-                print("Worker 2 online")
-                data = b""
-                payload_size = struct.calcsize("Q")
                 while len(data) < payload_size:
                     packet = s.recv(4*1024)
                     if not packet: break
@@ -59,11 +63,15 @@ class Worker2(QThread):
                 frame_data = data[:msg_size] 
                 data = data[msg_size:]
                 packetframe = pickle.loads(frame_data)
+                #time.sleep(0.01)
                 queue.put(packetframe)
                 print(packetframe)
                 key = cv2.waitKey(10)
                 if key == 13:
                     break
+            key = cv2.waitKey(10)
+            if key == 13:
+                break
     def stop(self):
         self.ThreadActive = False
         self.quit()
@@ -73,16 +81,15 @@ class Worker1(QThread):
     def run(self):
         self.ThreadActive = True
         while self.ThreadActive:
-            while True:
-                print("Worker1 online")
-                packetframe = queue.get()
-                Image = cv2.cvtColor(packetframe, cv2.COLOR_BGR2RGB)
-                ConvertToQtFormat = QImage(Image.data, Image.shape[1], Image.shape[0], QImage.Format_RGB888)
-                Pic = ConvertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
-                self.ImageUpdate.emit(Pic)
-                if key == 13:
-                    key = cv2.waitKey(10)
-                    break 
+            print("Worker1 online")
+            packetframe = queue.get()
+            Image = cv2.cvtColor(packetframe, cv2.COLOR_BGR2RGB)
+            ConvertToQtFormat = QImage(Image.data, Image.shape[1], Image.shape[0], QImage.Format_RGB888)
+            Pic = ConvertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
+            self.ImageUpdate.emit(Pic)
+            key = cv2.waitKey(10)
+            if key == 13:
+                break 
     def stop(self):
         self.ThreadActive = False
         self.quit()
