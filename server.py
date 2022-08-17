@@ -3,7 +3,7 @@ import cv2
 import pickle
 import struct
 
-host = '10.20.50.4'
+host = '10.20.50.87'
 port = 80
 
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -40,7 +40,6 @@ while True:
             a = pickle.dumps(frame)
             message = struct.pack("Q", len(a))+a
             client_socket.sendall(message)
-            cv2.imshow('Server',frame)
             key = cv2.waitKey(10)
             if key == 13:
                 client_socket.close()
