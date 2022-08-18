@@ -31,7 +31,7 @@ while True:
         vid = cv2.VideoCapture(0)
         while(vid.isOpened()):
             img, frame = vid.read()
-            __draw_label(frame, 'Hello World', (20,20), (255,0,0))
+            #__draw_label(frame, 'Hello World', (20,20), (255,0,0))
             a = pickle.dumps(frame)
             message = struct.pack("Q", len(a))+a
             client_socket.sendall(message)

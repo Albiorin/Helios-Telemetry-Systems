@@ -12,7 +12,7 @@ import numpy as np
 from queue import *
 import PyQt5
 import time
-
+import keyboard
 
 host = '10.20.50.87'
 port = 80
@@ -28,22 +28,21 @@ class MainWindow(QWidget):
         self.CancelBTN = QPushButton("Cancel")
         self.CancelBTN.clicked.connect(self.CancelFeed)
         self.VBL.addWidget(self.CancelBTN)
-        self.Worker2 = Worker2()
+        self.Worker2 = Worker1()
         self.Worker2.start()
-        self.Worker1 = Worker1()
+        self.Worker1 = Worker2()
         self.Worker1.start()
-        
+        self.Worker3 = Worker3()
+        self.Worker3.start()
         self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
         self.setLayout(self.VBL)
-
     def ImageUpdateSlot(self, Image):
         self.FeedLabel.setPixmap(QPixmap.fromImage(Image))
-
     def CancelFeed(self):
         print("hehe")
 
 print("Main thread online")
-class Worker2(QThread):
+class Worker1(QThread):
     def run(self):
         self.ThreadActive = True
         while self.ThreadActive:
@@ -65,7 +64,7 @@ class Worker2(QThread):
                 packetframe = pickle.loads(frame_data)
                 #time.sleep(0.01)
                 queue.put(packetframe)
-                print(packetframe)
+                #print(packetframe)
                 key = cv2.waitKey(10)
                 if key == 13:
                     break
@@ -76,20 +75,37 @@ class Worker2(QThread):
         self.ThreadActive = False
         self.quit()
 
-class Worker1(QThread):
+class Worker2(QThread):
     ImageUpdate = pyqtSignal(QImage)
     def run(self):
         self.ThreadActive = True
         while self.ThreadActive:
-            print("Worker1 online")
             packetframe = queue.get()
             Image = cv2.cvtColor(packetframe, cv2.COLOR_BGR2RGB)
-            ConvertToQtFormat = QImage(Image.data, Image.shape[1], Image.shape[0], QImage.Format_RGB888)
+            ConvertToQtFormat = QImage(Image.data, Image.shape[1], Image.shape[0], QImage.Format_RGB888) 
             Pic = ConvertToQtFormat.scaled(640, 480, Qt.KeepAspectRatio)
             self.ImageUpdate.emit(Pic)
             key = cv2.waitKey(10)
             if key == 13:
                 break 
+    def stop(self):
+        self.ThreadActive = False
+        self.quit()
+
+class Worker3(QThread):
+    def run(self):
+        self.ThreadActive = True
+        while self.ThreadActive:
+            while True:
+                if keyboard.read_key() == "w":
+                    print("Going Forward...")
+                elif keyboard.read_key() == "s":
+                    print("Reversing...")
+                elif keyboard.read_key() == "a":
+                    print("Turning left...")
+                elif keyboard.read_key() == "d":
+                    print("Turning right...")
+                    break           
     def stop(self):
         self.ThreadActive = False
         self.quit()
