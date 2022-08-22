@@ -13,14 +13,18 @@ from queue import *
 import PyQt5
 import time
 import keyboard
+from qt_thread_updater import ThreadUpdater
+from PyQt5 import QtWidgets, QtGui, QtCore
 
-host = '10.20.50.87'
+host = 'localhost'
 port = 80
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect((host, 80))
 queue = Queue()
 class MainWindow(QWidget):
     def __init__(self):
+
+        #add qt widgets
         super(MainWindow, self).__init__()
         self.VBL = QVBoxLayout()
         self.FeedLabel = QLabel()
@@ -28,25 +32,27 @@ class MainWindow(QWidget):
         self.CancelBTN = QPushButton("Cancel")
         self.CancelBTN.clicked.connect(self.CancelFeed)
         self.VBL.addWidget(self.CancelBTN)
-        self.Worker2 = Worker1()
-        self.Worker2.start()
-        self.Worker1 = Worker2()
+
+        #define and start threads
+        self.Worker1 = Worker1()
         self.Worker1.start()
+        self.Worker2 = Worker2()
+        self.Worker2.start()
         self.Worker3 = Worker3()
         self.Worker3.start()
-        self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
+
+        #image updating
+        self.Worker2.ImageUpdate.connect(self.ImageUpdateSlot)
         self.setLayout(self.VBL)
     def ImageUpdateSlot(self, Image):
         self.FeedLabel.setPixmap(QPixmap.fromImage(Image))
     def CancelFeed(self):
         print("hehe")
 
-print("Main thread online")
 class Worker1(QThread):
     def run(self):
         self.ThreadActive = True
         while self.ThreadActive:
-            print("Worker 2 online")
             data = b""
             payload_size = struct.calcsize("Q")
             while True:
@@ -99,12 +105,20 @@ class Worker3(QThread):
             while True:
                 if keyboard.read_key() == "w":
                     print("Going Forward...")
+                    forwardcommand = "forward"
+                    s.send(forwardcommand.encode())
                 elif keyboard.read_key() == "s":
                     print("Reversing...")
+                    reversecommand = "reverse"
+                    s.send(reversecommand.encode())
                 elif keyboard.read_key() == "a":
                     print("Turning left...")
+                    leftcommand = "left"
+                    s.send(leftcommand.encode())
                 elif keyboard.read_key() == "d":
                     print("Turning right...")
+                    rightcommand = "right"
+                    s.send(rightcommand.encode())
                     break           
     def stop(self):
         self.ThreadActive = False
